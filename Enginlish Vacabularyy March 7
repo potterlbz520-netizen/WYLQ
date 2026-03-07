@@ -1,0 +1,311 @@
+import { useState, useMemo } from "react";
+
+const vocab = [
+  // ── DAILY LIFE ──
+  { id:1,  word:"routine",      fil:"gawi / rutina",         def:"A regular sequence of actions followed habitually.",            category:"Daily Life",   root:"rout- (path/road)",  rootType:"Root" },
+  { id:2,  word:"hygiene",      fil:"kalinisan",             def:"Practices that maintain health and prevent disease.",           category:"Daily Life",   root:"hygi- (health)",     rootType:"Root" },
+  { id:3,  word:"chore",        fil:"gawaing-bahay",         def:"A routine domestic task that must be done regularly.",         category:"Daily Life",   root:"-",                  rootType:"—" },
+  { id:4,  word:"domestic",     fil:"pang-tahanan",          def:"Relating to the home, household, or family affairs.",          category:"Daily Life",   root:"dom- (house)",       rootType:"Root" },
+  { id:5,  word:"appliance",    fil:"kagamitan sa bahay",    def:"An electrical device designed for household use.",             category:"Daily Life",   root:"appli- (apply)",     rootType:"Root" },
+  { id:6,  word:"utility",      fil:"serbisyo / gamit",      def:"A service such as electricity, water, or gas supplied to homes.", category:"Daily Life", root:"util- (useful)",     rootType:"Root" },
+  { id:7,  word:"schedule",     fil:"iskedyul",              def:"A plan that lists events and the time they will happen.",      category:"Daily Life",   root:"sched- (plan)",      rootType:"Root" },
+  { id:8,  word:"budget",       fil:"badyet",                def:"A plan that estimates income and expenditure.",                category:"Daily Life",   root:"-",                  rootType:"—" },
+  { id:9,  word:"leisure",      fil:"libangan / pahinga",    def:"Time free from work, available for rest and enjoyment.",      category:"Daily Life",   root:"leis- (permitted)",  rootType:"Root" },
+  { id:10, word:"commute",      fil:"biyahe sa trabaho",     def:"Travel regularly between home and place of work.",            category:"Daily Life",   root:"com- (together)",    rootType:"Prefix" },
+  { id:11, word:"neighborhood", fil:"kapitbahayan",          def:"A district or area forming a community within a town.",       category:"Daily Life",   root:"neigh- (near)",      rootType:"Root" },
+  { id:12, word:"renovation",   fil:"pagpapabago ng bahay",  def:"The action of improving or repairing a building.",            category:"Daily Life",   root:"-tion (action)",     rootType:"Suffix" },
+
+  // ── SPORTS ──
+  { id:13, word:"endurance",    fil:"tibay / pagtitiis",     def:"The ability to sustain prolonged stressful effort.",          category:"Sports",       root:"en- (cause) + dur- (hard)", rootType:"Prefix+Root" },
+  { id:14, word:"agility",      fil:"liksi / kabaitan",      def:"The ability to move quickly and change direction with ease.", category:"Sports",       root:"agil- (quick)",      rootType:"Root" },
+  { id:15, word:"stamina",      fil:"lakas / tibay",         def:"The ability to sustain physical and mental effort over time.", category:"Sports",       root:"stamin- (thread of life)", rootType:"Root" },
+  { id:16, word:"sprint",       fil:"mabilis na takbo",      def:"To run at full speed over a short distance.",                 category:"Sports",       root:"-",                  rootType:"—" },
+  { id:17, word:"tournament",   fil:"torneo / paligsahan",   def:"A series of contests between players competing for a prize.", category:"Sports",       root:"tourn- (turn/joust)", rootType:"Root" },
+  { id:18, word:"athlete",      fil:"atleta",                def:"A person who is skilled and trained in sports and exercise.", category:"Sports",       root:"athl- (prize/contest)", rootType:"Root" },
+  { id:19, word:"referee",      fil:"tagahatol",             def:"An official who watches a game and ensures rules are followed.", category:"Sports",     root:"re- (again) + fer- (carry)", rootType:"Prefix+Root" },
+  { id:20, word:"penalty",      fil:"parusa / penalti",      def:"A disadvantage imposed on a player for breaking a rule.",    category:"Sports",       root:"pen- (punish)",      rootType:"Root" },
+  { id:21, word:"champion",     fil:"kampeon",               def:"A person who has won first place in a competition.",         category:"Sports",       root:"camp- (field/combat)", rootType:"Root" },
+  { id:22, word:"gymnasium",    fil:"gym / palakasan",       def:"A room or building equipped for physical exercise and sports.", category:"Sports",     root:"gymn- (naked/exercise)", rootType:"Root" },
+  { id:23, word:"posture",      fil:"postura / tikas",       def:"The position or alignment of the body when standing or sitting.", category:"Sports",   root:"posit- (place)",     rootType:"Root" },
+  { id:24, word:"flexibility",  fil:"kakayahang umangkop",   def:"The quality of bending easily without breaking.",            category:"Sports",       root:"flex- (bend) + -ity", rootType:"Root+Suffix" },
+
+  // ── CARS & TRANSPORT ──
+  { id:25, word:"accelerate",   fil:"pabilisin / tumibok",   def:"To increase in speed or cause something to happen faster.",  category:"Cars",         root:"ac- (to) + celer- (swift)", rootType:"Prefix+Root" },
+  { id:26, word:"brake",        fil:"preno",                 def:"A device for slowing or stopping a moving vehicle.",         category:"Cars",         root:"-",                  rootType:"—" },
+  { id:27, word:"chassis",      fil:"balangkas ng sasakyan", def:"The base frame structure on which a vehicle is built.",      category:"Cars",         root:"chass- (frame)",     rootType:"Root" },
+  { id:28, word:"exhaust",      fil:"tambutso / singaw",     def:"Waste gases expelled from an engine after combustion.",      category:"Cars",         root:"ex- (out) + haust- (drain)", rootType:"Prefix+Root" },
+  { id:29, word:"transmission", fil:"transmisyon",           def:"The mechanism that transfers engine power to the wheels.",   category:"Cars",         root:"trans- (across) + -ion", rootType:"Prefix+Suffix" },
+  { id:30, word:"horsepower",   fil:"lakas ng makina",       def:"A unit measuring the power output of an engine.",           category:"Cars",         root:"horse + power",      rootType:"Compound" },
+  { id:31, word:"navigation",   fil:"nabigasyon / direksyon",def:"The process of planning and directing a route.",             category:"Cars",         root:"navig- (sail/steer) + -tion", rootType:"Root+Suffix" },
+  { id:32, word:"pedestrian",   fil:"taong naglalakad",      def:"A person traveling on foot in a public area.",              category:"Cars",         root:"ped- (foot)",        rootType:"Root" },
+  { id:33, word:"intersection", fil:"krus-daan / kanto",     def:"A point where two or more roads meet and cross.",           category:"Cars",         root:"inter- (between) + sect- (cut)", rootType:"Prefix+Root" },
+  { id:34, word:"autonomous",   fil:"awtonomous / sariling-guya", def:"Operating independently without human control.",       category:"Cars",         root:"auto- (self) + nom- (law)", rootType:"Root" },
+  { id:35, word:"overtake",     fil:"lampasan / abutan",     def:"To catch up with and pass another vehicle moving in the same direction.", category:"Cars", root:"over- (above/past)", rootType:"Prefix" },
+  { id:36, word:"mileage",      fil:"distansya / milya",     def:"The number of miles traveled or the fuel efficiency of a vehicle.", category:"Cars",  root:"mile + -age",        rootType:"Root+Suffix" },
+
+  // ── FOOD & HEALTH ──
+  { id:37, word:"nutrition",    fil:"nutrisyon / sustansya", def:"The process of taking in food necessary for health and growth.", category:"Food",      root:"nutri- (nourish) + -tion", rootType:"Root+Suffix" },
+  { id:38, word:"protein",      fil:"protina",               def:"A macronutrient essential for building and repairing body tissue.", category:"Food",   root:"proto- (first/primary)", rootType:"Root" },
+  { id:39, word:"metabolism",   fil:"metabolismo",           def:"The chemical processes by which the body converts food into energy.", category:"Food", root:"meta- (change) + bol- (throw)", rootType:"Prefix+Root" },
+  { id:40, word:"calorie",      fil:"kalori",                def:"A unit measuring the energy content in food and drinks.",    category:"Food",         root:"calor- (heat)",      rootType:"Root" },
+  { id:41, word:"hydration",    fil:"hidrasyon / pag-inom",  def:"The process of maintaining adequate water in the body.",    category:"Food",         root:"hydr- (water) + -tion", rootType:"Root+Suffix" },
+  { id:42, word:"digestion",    fil:"pagtunaw ng pagkain",   def:"The process of breaking down food into absorbable nutrients.", category:"Food",       root:"di- + gest- (carry/bear)", rootType:"Root" },
+  { id:43, word:"ingredient",   fil:"sangkap",               def:"A component substance used in a mixture or recipe.",        category:"Food",         root:"in- + gred- (step into)", rootType:"Prefix+Root" },
+  { id:44, word:"cuisine",      fil:"lutuin / lutong",       def:"A style or method of cooking characteristic of a region.",  category:"Food",         root:"cuis- (kitchen)",    rootType:"Root" },
+  { id:45, word:"fermentation", fil:"pag-aasim / pag-aalak", def:"A metabolic process where microbes convert sugars into acids or alcohol.", category:"Food", root:"ferment- (leaven) + -tion", rootType:"Root+Suffix" },
+  { id:46, word:"carbohydrate", fil:"karbohidrato",          def:"A nutrient (sugars and starches) that provides energy.",    category:"Food",         root:"carbo- (carbon) + hydr- (water)", rootType:"Root" },
+
+  // ── WORK & BUSINESS ──
+  { id:47, word:"collaborate",  fil:"makipagtulungan",       def:"To work jointly with others toward a common goal.",         category:"Work",         root:"co- (together) + labor- (work)", rootType:"Prefix+Root" },
+  { id:48, word:"deadline",     fil:"takdang panahon",       def:"The latest time or date by which something must be completed.", category:"Work",     root:"dead + line",        rootType:"Compound" },
+  { id:49, word:"negotiate",    fil:"makipag-ayos",          def:"To discuss with others to reach a mutually acceptable agreement.", category:"Work",  root:"negot- (not leisure)", rootType:"Root" },
+  { id:50, word:"entrepreneur", fil:"negosyante",            def:"A person who organizes and runs a business, taking on financial risk.", category:"Work", root:"entre- (between) + prend- (take)", rootType:"Prefix+Root" },
+  { id:51, word:"innovation",   fil:"inobasyon / bagong ideya", def:"The introduction of new methods, ideas, or products.",  category:"Work",         root:"in- + nov- (new) + -tion", rootType:"Prefix+Root+Suffix" },
+  { id:52, word:"productivity", fil:"produktibidad",         def:"The efficiency with which work or output is produced.",    category:"Work",         root:"pro- + duct- (lead) + -ivity", rootType:"Prefix+Root+Suffix" },
+  { id:53, word:"delegate",     fil:"mag-atas / italaga",    def:"To assign responsibility or authority to another person.",  category:"Work",         root:"de- + leg- (send/law)", rootType:"Prefix+Root" },
+  { id:54, word:"revenue",      fil:"kita ng negosyo",       def:"The total income generated by a business from its activities.", category:"Work",    root:"re- (back) + ven- (come)", rootType:"Prefix+Root" },
+  { id:55, word:"invoice",      fil:"resibo / bill",         def:"A formal document requesting payment for goods or services.", category:"Work",      root:"in- + voice- (way)",  rootType:"Root" },
+  { id:56, word:"strategy",     fil:"estratehiya / plano",   def:"A plan of action designed to achieve a long-term goal.",   category:"Work",         root:"strat- (army) + -egy (lead)", rootType:"Root" },
+
+  // ── TECHNOLOGY ──
+  { id:57, word:"algorithm",    fil:"algorithm / proseso",   def:"A step-by-step procedure for solving a problem or performing a task.", category:"Tech", root:"al-Khwarizmi (mathematician name)", rootType:"Proper Noun Origin" },
+  { id:58, word:"bandwidth",    fil:"lapad ng banda",        def:"The maximum rate of data transfer across a network connection.", category:"Tech",   root:"band + width",       rootType:"Compound" },
+  { id:59, word:"encryption",   fil:"pag-encrypt",           def:"The process of converting data into a coded form to prevent unauthorized access.", category:"Tech", root:"en- + crypt- (hidden) + -ion", rootType:"Prefix+Root+Suffix" },
+  { id:60, word:"interface",    fil:"interface / harapan",   def:"A point of interaction between a user and a computer system.", category:"Tech",    root:"inter- (between) + face", rootType:"Prefix+Root" },
+];
+
+const CATEGORIES = ["All", "Daily Life", "Sports", "Cars", "Food", "Work", "Tech"];
+const ROOT_TYPES = ["All", "Root", "Prefix", "Suffix", "Prefix+Root", "Root+Suffix", "Compound", "—"];
+
+const CAT_COLORS = {
+  "Daily Life": { bg: "#FFF3E0", badge: "#FF8F00", text: "#4E342E" },
+  "Sports":     { bg: "#E8F5E9", badge: "#2E7D32", text: "#1B5E20" },
+  "Cars":       { bg: "#E3F2FD", badge: "#1565C0", text: "#0D47A1" },
+  "Food":       { bg: "#FCE4EC", badge: "#C62828", text: "#880E4F" },
+  "Work":       { bg: "#EDE7F6", badge: "#4527A0", text: "#311B92" },
+  "Tech":       { bg: "#E0F7FA", badge: "#006064", text: "#004D40" },
+};
+
+const CAT_ICONS = {
+  "Daily Life": "🏠", "Sports": "🏃", "Cars": "🚗",
+  "Food": "🍎", "Work": "💼", "Tech": "💻"
+};
+
+export default function VocabApp() {
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeRoot, setActiveRoot] = useState("All");
+  const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState(null);
+  const [today] = useState(new Date().toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" }));
+
+  const filtered = useMemo(() => vocab.filter(v => {
+    const catOk = activeCategory === "All" || v.category === activeCategory;
+    const rootOk = activeRoot === "All" || v.rootType === activeRoot;
+    const searchOk = !search || v.word.toLowerCase().includes(search.toLowerCase()) ||
+      v.fil.toLowerCase().includes(search.toLowerCase());
+    return catOk && rootOk && searchOk;
+  }), [activeCategory, activeRoot, search]);
+
+  return (
+    <div style={{ fontFamily:"'Georgia', serif", minHeight:"100vh", background:"#FAFAF7", color:"#1a1a1a" }}>
+      {/* Header */}
+      <div style={{
+        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+        padding: "40px 32px 32px",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        <div style={{ position:"absolute", inset:0, backgroundImage:"radial-gradient(circle at 20% 50%, rgba(255,200,100,0.08) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(100,180,255,0.08) 0%, transparent 50%)" }} />
+        <div style={{ maxWidth:1100, margin:"0 auto", position:"relative" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:16 }}>
+            <div>
+              <div style={{ fontSize:11, letterSpacing:4, color:"#ffd700", textTransform:"uppercase", marginBottom:8, fontFamily:"'Courier New', monospace" }}>
+                Daily Vocabulary System · 每日词汇系统
+              </div>
+              <h1 style={{ margin:0, fontSize:"clamp(28px,5vw,52px)", fontWeight:900, color:"#fff", lineHeight:1.1, letterSpacing:-1 }}>
+                Word<span style={{ color:"#ffd700" }}>Power</span>
+                <span style={{ fontSize:"0.4em", color:"rgba(255,255,255,0.4)", marginLeft:12, fontWeight:400, letterSpacing:2 }}>EN · FIL</span>
+              </h1>
+              <p style={{ color:"rgba(255,255,255,0.55)", marginTop:10, fontSize:14, fontFamily:"sans-serif" }}>
+                {today}
+              </p>
+            </div>
+            <div style={{ display:"flex", gap:16, flexWrap:"wrap" }}>
+              {[
+                { n: vocab.length, label:"Total Words" },
+                { n: filtered.length, label:"Showing" },
+                { n: CATEGORIES.length - 1, label:"Categories" },
+              ].map(s => (
+                <div key={s.label} style={{ background:"rgba(255,255,255,0.07)", borderRadius:12, padding:"12px 20px", textAlign:"center", border:"1px solid rgba(255,255,255,0.1)" }}>
+                  <div style={{ fontSize:28, fontWeight:800, color:"#ffd700", lineHeight:1 }}>{s.n}</div>
+                  <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", marginTop:4, fontFamily:"sans-serif", letterSpacing:1 }}>{s.label.toUpperCase()}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"24px 20px" }}>
+
+        {/* Principle Banner */}
+        <div style={{ background:"#fff", borderRadius:16, padding:"20px 24px", marginBottom:24, border:"2px solid #f0e68c", display:"flex", gap:16, alignItems:"flex-start" }}>
+          <div style={{ fontSize:28, flexShrink:0 }}>💡</div>
+          <div>
+            <div style={{ fontWeight:700, fontSize:16, marginBottom:6, color:"#1a1a1a" }}>词汇学习系统原理 · System Principle</div>
+            <div style={{ fontSize:13, lineHeight:1.8, color:"#444", fontFamily:"sans-serif" }}>
+              <b>① 词根词缀记忆法 (Root & Affix Method)</b>：通过掌握词根（如 <code style={{background:"#f5f5f5",padding:"1px 5px",borderRadius:4}}>hydro-</code>=水, <code style={{background:"#f5f5f5",padding:"1px 5px",borderRadius:4}}>port-</code>=运输）和词缀（前缀/后缀），一个词根可衍生出数十个单词，形成词汇网络，效率提升 3–5 倍。
+              &nbsp;&nbsp;<b>② 场景分类法 (Contextual Clustering)</b>：按生活、运动、汽车等真实场景分类，帮助大脑建立「情境记忆」，遇到实际场景时词汇自然浮现。
+              &nbsp;&nbsp;<b>③ 双语锚定 (Bilingual Anchoring)</b>：英语 + 菲律宾语同步学习，母语作为记忆锚点，加速理解同时保持思维灵活性。
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div style={{ marginBottom:20 }}>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="🔍  Search word or Filipino translation..."
+            style={{ width:"100%", padding:"12px 18px", borderRadius:12, border:"2px solid #e0e0e0", fontSize:15, fontFamily:"sans-serif", outline:"none", boxSizing:"border-box", background:"#fff" }}
+          />
+        </div>
+
+        {/* Category Filter */}
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:11, letterSpacing:2, color:"#999", fontFamily:"sans-serif", marginBottom:8 }}>FILTER BY CATEGORY</div>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            {CATEGORIES.map(c => (
+              <button key={c} onClick={() => setActiveCategory(c)} style={{
+                padding:"7px 16px", borderRadius:20, border:"2px solid",
+                borderColor: activeCategory === c ? "#1a1a2e" : "#ddd",
+                background: activeCategory === c ? "#1a1a2e" : "#fff",
+                color: activeCategory === c ? "#fff" : "#555",
+                cursor:"pointer", fontSize:13, fontFamily:"sans-serif", fontWeight:600,
+                transition:"all 0.15s"
+              }}>
+                {c !== "All" ? CAT_ICONS[c] + " " : ""}{c}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Root Filter */}
+        <div style={{ marginBottom:24 }}>
+          <div style={{ fontSize:11, letterSpacing:2, color:"#999", fontFamily:"sans-serif", marginBottom:8 }}>FILTER BY ROOT/AFFIX TYPE</div>
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+            {ROOT_TYPES.map(r => (
+              <button key={r} onClick={() => setActiveRoot(r)} style={{
+                padding:"5px 12px", borderRadius:20, border:"2px solid",
+                borderColor: activeRoot === r ? "#ffd700" : "#eee",
+                background: activeRoot === r ? "#ffd700" : "#fff",
+                color: activeRoot === r ? "#1a1a2e" : "#777",
+                cursor:"pointer", fontSize:11, fontFamily:"'Courier New', monospace", fontWeight:700,
+                transition:"all 0.15s"
+              }}>
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Table */}
+        <div style={{ background:"#fff", borderRadius:20, overflow:"hidden", boxShadow:"0 4px 40px rgba(0,0,0,0.07)", border:"1px solid #eee" }}>
+          {/* Table Header */}
+          <div style={{
+            display:"grid", gridTemplateColumns:"50px 1fr 1fr 1fr 130px 140px",
+            padding:"14px 20px", background:"#1a1a2e", gap:8,
+            fontSize:11, fontFamily:"sans-serif", letterSpacing:2, color:"rgba(255,255,255,0.6)", fontWeight:700
+          }}>
+            <div>#</div>
+            <div>ENGLISH WORD</div>
+            <div>FILIPINO · 菲律宾语</div>
+            <div>ENGLISH DEFINITION</div>
+            <div>CATEGORY</div>
+            <div>ROOT · AFFIX</div>
+          </div>
+
+          {/* Rows */}
+          {filtered.map((v, i) => {
+            const colors = CAT_COLORS[v.category];
+            const isExp = expanded === v.id;
+            return (
+              <div
+                key={v.id}
+                onClick={() => setExpanded(isExp ? null : v.id)}
+                style={{
+                  display:"grid", gridTemplateColumns:"50px 1fr 1fr 1fr 130px 140px",
+                  padding: isExp ? "18px 20px" : "13px 20px",
+                  gap:8, cursor:"pointer", alignItems:"center",
+                  background: isExp ? colors.bg : (i % 2 === 0 ? "#fff" : "#FAFAF7"),
+                  borderBottom:"1px solid #f0f0f0",
+                  transition:"all 0.15s",
+                }}
+              >
+                <div style={{ fontSize:12, color:"#bbb", fontFamily:"monospace", fontWeight:600 }}>
+                  {String(v.id).padStart(2,"0")}
+                </div>
+                <div>
+                  <div style={{ fontSize:17, fontWeight:800, color:"#1a1a2e", letterSpacing:-0.5 }}>{v.word}</div>
+                  {isExp && (
+                    <div style={{ marginTop:8, fontSize:12, color:"#555", fontFamily:"sans-serif", lineHeight:1.6, background:"rgba(0,0,0,0.04)", padding:"8px 12px", borderRadius:8 }}>
+                      📖 {v.def}
+                    </div>
+                  )}
+                </div>
+                <div style={{ fontSize:14, color:"#333", fontFamily:"sans-serif", fontWeight:600 }}>{v.fil}</div>
+                <div style={{ fontSize:12, color:"#666", fontFamily:"sans-serif", lineHeight:1.5, display: isExp ? "none" : "block" }}>
+                  {v.def.length > 65 ? v.def.slice(0,65)+"…" : v.def}
+                </div>
+                {isExp && <div />}
+                <div>
+                  <span style={{
+                    display:"inline-flex", alignItems:"center", gap:4,
+                    background: colors.bg, color: colors.badge,
+                    padding:"4px 10px", borderRadius:20, fontSize:11,
+                    fontFamily:"sans-serif", fontWeight:700, border:`1.5px solid ${colors.badge}22`
+                  }}>
+                    {CAT_ICONS[v.category]} {v.category}
+                  </span>
+                </div>
+                <div>
+                  {v.rootType !== "—" ? (
+                    <span style={{
+                      display:"inline-block",
+                      background:"#f0f4ff", color:"#3949AB",
+                      padding:"3px 10px", borderRadius:20, fontSize:10,
+                      fontFamily:"'Courier New', monospace", fontWeight:700,
+                      maxWidth:"100%", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"
+                    }}>
+                      {v.root}
+                    </span>
+                  ) : (
+                    <span style={{ color:"#ccc", fontSize:12 }}>—</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {filtered.length === 0 && (
+            <div style={{ padding:48, textAlign:"center", color:"#aaa", fontFamily:"sans-serif" }}>
+              No words match your filters. Try adjusting the search or filters above.
+            </div>
+          )}
+        </div>
+
+        {/* Footer Legend */}
+        <div style={{ marginTop:24, display:"flex", gap:16, flexWrap:"wrap", justifyContent:"center" }}>
+          {Object.entries(CAT_ICONS).map(([cat, icon]) => (
+            <div key={cat} style={{ display:"flex", alignItems:"center", gap:6, fontSize:13, fontFamily:"sans-serif", color:"#555" }}>
+              <span>{icon}</span><span style={{ color: CAT_COLORS[cat].badge, fontWeight:600 }}>{cat}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ textAlign:"center", marginTop:16, fontSize:12, color:"#bbb", fontFamily:"sans-serif" }}>
+          Click any row to expand the full English definition · 点击任意行查看完整英文释义
+        </div>
+      </div>
+    </div>
+  );
+}
